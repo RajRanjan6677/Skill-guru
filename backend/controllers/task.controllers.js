@@ -1,9 +1,16 @@
 const Task=require('../models/task.models')
-const getTask=async (req,res)=>{
-    const userId=req.user.id
-    const task=await Task.find({userId})
-    res.json(task)
-}
+// const getTask=async (req,res)=>{
+//     const userId=req.user.id
+//     const task=await Task.find({userId})
+//     res.json(task)
+// }
+const getTask = async (req, res) => {
+  const userId = req.user.id;
+  const task = await Task.find({ userId });
+  //console.log("Fetched tasks:", task);  ✅ see if this logs tasks
+  res.json(task);
+};
+
 const createTask=async (req,res)=>{
     const userId=req.user.id
     const {title,description}=req.body

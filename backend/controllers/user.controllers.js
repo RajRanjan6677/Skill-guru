@@ -5,8 +5,8 @@ const User=require('../models/user.models')
 const authentication = require('../middleware/auth.middleware')
 const registerUser=async (req,res)=>{
   const {username,email,password}=req.body
-  const userCheck=await user.findOne({email})
-  if(user){
+  const userCheck=await User.findOne({email})
+  if(userCheck){
     res.json({message:"email already exists"})
   }
   const salt=await bcrypt.genSalt(10)
