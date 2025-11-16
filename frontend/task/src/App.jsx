@@ -16,6 +16,10 @@ import Skills from "./pages/Skills";
 import AIChat from "./pages/AiChat";
 import Profile from "./pages/Profile";
 import Logout from "./components/Logout";
+import AdminSignup from "./pages/AdminSignup";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -56,6 +60,20 @@ function App() {
             {/* Public Routes */}
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/signup" element={<AdminSignup />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+
+            {/* Admin Routes */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <PrivateRoute>
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                </PrivateRoute>
+              }
+            />
 
             {/* Protected Routes */}
             <Route
@@ -139,13 +157,13 @@ function App() {
               }
             />
             <Route
-  path="/logout"
-  element={
-    <PrivateRoute>
-      <Logout />
-    </PrivateRoute>
-  }
-/>
+              path="/logout"
+              element={
+                <PrivateRoute>
+                  <Logout />
+                </PrivateRoute>
+              }
+            />
 
           </Routes>
         </div>

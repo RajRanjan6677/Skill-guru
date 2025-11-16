@@ -3,6 +3,10 @@ const mongoose=require('mongoose')
 const userRouter=require('./routes/user.routes')
 const authentication=require('./middleware/auth.middleware')
 const taskRouter=require('./routes/task.routes')
+const progressRouter=require('./routes/progress.routes.js')
+
+const courseRoutes=require("./routes/courseRoutes.js");
+
 const cookieParser=require('cookie-parser')
 const app = express()
 const port = 3000
@@ -25,6 +29,10 @@ app.use(cookieParser())
 
 app.use('/auth',userRouter)
 app.use('/task',authentication,taskRouter)
+app.use('/courses',courseRoutes)
+app.use("/progress", authentication, progressRouter);
+app.use("/enrollments", require("./routes/enrollmentRoutes"));
+
 app.get('/',authentication,(req, res) => {
   res.send('Hello World!')
 })

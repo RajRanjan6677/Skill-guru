@@ -1,85 +1,120 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { User, BookOpen, Brain, Settings, Mail, Calendar } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Mail, User, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  const user = {
-    name: "Raj Ranjan Singh",
-    email: "raj@example.com",
-    joinDate: "Jan 15, 2024",
-    avatar: "https://images.unsplash.com/photo-1603415526960-fb2e5cda06a8?w=200",
-    stats: {
-      courses: 5,
-      skills: 8,
-      completedLessons: 23,
-    },
-  };
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/auth/profile", {
+          method: "GET",
+          credentials: "include", // ✅ important if you're using cookies for auth
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const data = await res.json();
+        
+        setUser(data);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchEnrolledCourses = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:3000/enrollments/user/courses",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setEnrolledCourses(data);
+        }
+      } catch (error) {
+        console.error("Error loading enrolled courses:", error);
+      }
+    };
+
+    fetchProfile();
+    fetchEnrolledCourses();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-gray-500 text-lg">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-red-500 text-lg">User not found or unauthorized.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-xl shadow-md p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
-        {/* Avatar */}
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-32 h-32 rounded-full object-cover"
-        />
+    <div className="p-8 bg-gray-50 min-h-screen flex justify-center items-center">
+      <div className="bg-white rounded-xl shadow-md p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <User className="inline-block w-6 h-6 text-blue-600 mr-2" />
+          My Profile
+        </h1>
 
-        {/* User Info */}
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2">
-            <User className="w-6 h-6 text-blue-600" />
-            {user.name}
-          </h1>
-          <p className="text-gray-600 flex items-center gap-2 mb-1">
-            <Mail className="w-4 h-4 text-gray-500" />
-            {user.email}
-          </p>
-          <p className="text-gray-600 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            Joined on {user.joinDate}
-          </p>
-
-          {/* Stats */}
-          <div className="mt-6 flex gap-6">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-blue-600">{user.stats.courses}</h2>
-              <p className="text-gray-600 flex items-center gap-1">
-                <BookOpen className="w-4 h-4" /> Courses
-              </p>
-            </div>
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-blue-600">{user.stats.skills}</h2>
-              <p className="text-gray-600 flex items-center gap-1">
-                <Brain className="w-4 h-4" /> Skills
-              </p>
-            </div>
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-blue-600">{user.stats.completedLessons}</h2>
-              <p className="text-gray-600">Lessons Completed</p>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <User className="w-5 h-5 text-blue-600" />
+            <span className="text-gray-800 font-medium">{user.username}</span>
           </div>
 
-          {/* Links */}
-          <div className="mt-6 flex flex-wrap gap-4">
-            <Link
-              to="/skills"
-              className="bg-blue-100 text-blue-700 px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-200 transition"
-            >
-              <Brain className="w-4 h-4" /> My Skills
-            </Link>
-            <Link
-              to="/my-courses"
-              className="bg-blue-100 text-blue-700 px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-200 transition"
-            >
-              <BookOpen className="w-4 h-4" /> My Courses
-            </Link>
-            <Link
-              to="/settings"
-              className="bg-blue-100 text-blue-700 px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-200 transition"
-            >
-              <Settings className="w-4 h-4" /> Settings
-            </Link>
+          <div className="flex items-center gap-3">
+            <Mail className="w-5 h-5 text-blue-600" />
+            <span className="text-gray-800">{user.email}</span>
+          </div>
+
+          {/* Enrolled Courses Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-800">
+                Enrolled Courses
+              </h2>
+            </div>
+
+            {enrolledCourses.length === 0 ? (
+              <p className="text-gray-500 text-sm italic">
+                No courses enrolled yet. Browse courses to get started!
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {enrolledCourses.map((course) => (
+                  <span
+                    key={course._id}
+                    onClick={() => navigate(`/course/${course._id}`)}
+                    className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition inline-flex items-center gap-1"
+                  >
+                    <BookOpen className="w-3 h-3" />
+                    {course.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

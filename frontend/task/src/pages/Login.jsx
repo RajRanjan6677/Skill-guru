@@ -95,17 +95,23 @@ const Login = () => {
         return;
       }
 
-      // ✅ Save token or user info (if your backend sends it)
-      localStorage.setItem("token", data.token);
+      // ✅ Save token and role
+      localStorage.setItem("token", data.token || "user-token");
+      const userRole = data.role || "user";
+      localStorage.setItem("userRole", userRole);
 
       setMessage("Login successful! Redirecting...");
-      localStorage.setItem("token", data.token);
 
-// 🔔 Notify sidebar and other components
-
+      // 🔔 Notify sidebar and other components
+      window.dispatchEvent(new Event("authChange"));
 
       setTimeout(() => {
-        navigate("/"); // Redirect to dashboard or home
+        // Redirect based on role: admin -> admin dashboard, user -> regular dashboard
+        if (userRole === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/"); // Redirect to regular dashboard
+        }
       }, 1000);
     } catch (error) {
       console.error("Login error:", error);

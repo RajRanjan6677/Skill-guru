@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -13,68 +13,90 @@ import {
   Cell,
 } from "recharts";
 
-const Progress = () => {
-  // Sample data
-  const learningData = [
-    { day: "Mon", hours: 2 },
-    { day: "Tue", hours: 3 },
-    { day: "Wed", hours: 1 },
-    { day: "Thu", hours: 4 },
-    { day: "Fri", hours: 2 },
-    { day: "Sat", hours: 3 },
-    { day: "Sun", hours: 0 },
-  ];
+const API_URL = "http://localhost:3000/progress";
 
-  const skillData = [
-    { name: "React", value: 40 },
-    { name: "Node.js", value: 30 },
-    { name: "JavaScript", value: 20 },
-    { name: "CSS", value: 10 },
-  ];
+const Progress = () => {
+  const [progress, setProgress] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    activeCourses: "",
+    hoursLearned: "",
+    completedLessons: "",
+    skillsGained: "",
+  });
+
+  // 🟢 Fetch progress
+  const fetchProgress = async () => {
+    try {
+      const res = await fetch(`${API_URL}/read`, { credentials: "include" });
+      const data = await res.json();
+      setProgress(data);
+      setFormData({
+        activeCourses: data.activeCourses || "",
+        hoursLearned: data.hoursLearned || "",
+        completedLessons: data.completedLessons || "",
+        skillsGained: data.skillsGained || "",
+      });
+    } catch (err) {
+      console.error("Error fetching progress:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🟡 Update progress
+  const updateProgress = async () => {
+    try {
+      const res = await fetch(`${API_URL}/update`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      setProgress(data.progress);
+      setShowModal(false);
+    } catch (err) {
+      console.error("Error updating progress:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProgress();
+  }, []);
+
+  if (loading) return <p className="p-8">Loading progress...</p>;
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-  const activeDays = [
-    { day: "Mon", active: true },
-    { day: "Tue", active: true },
-    { day: "Wed", active: false },
-    { day: "Thu", active: true },
-    { day: "Fri", active: true },
-    { day: "Sat", active: false },
-    { day: "Sun", active: false },
-  ];
+  const learningData = progress?.learningData || [];
+  const skillData = progress?.skillData || [];
+  const activeDays = progress?.activeDays || [];
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">My Progress</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">My Progress</h1>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          ✏️ Edit Progress
+        </button>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-blue-600">5</h2>
-          <p className="text-gray-600">Active Courses</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-blue-600">12h</h2>
-          <p className="text-gray-600">Hours Learned</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-blue-600">23</h2>
-          <p className="text-gray-600">Completed Lessons</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-blue-600">8</h2>
-          <p className="text-gray-600">Skills Gained</p>
-        </div>
+        <StatCard title="Active Courses" value={progress?.activeCourses || 0} />
+        <StatCard title="Hours Learned" value={`${progress?.hoursLearned || 0}h`} />
+        <StatCard title="Completed Lessons" value={progress?.completedLessons || 0} />
+        <StatCard title="Skills Gained" value={progress?.skillsGained || 0} />
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        {/* Learning Hours Line Chart */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Learning Hours This Week
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-10">
+        <ChartCard title="Learning Hours This Week">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={learningData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -85,38 +107,15 @@ const Progress = () => {
               <Line type="monotone" dataKey="hours" stroke="#8884d8" />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        {/* Skills Pie Chart */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Skills Progress
-          </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={skillData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {skillData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        
       </div>
 
       {/* Active Days */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Active Days</h2>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           {activeDays.map((day) => (
             <div
               key={day.day}
@@ -129,8 +128,49 @@ const Progress = () => {
           ))}
         </div>
       </div>
+
+      {/* 🟣 Modal */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            <h2 className="text-xl font-semibold mb-4">Update Progress</h2>
+            {["activeCourses", "hoursLearned", "completedLessons", "skillsGained"].map((key) => (
+              <input
+                key={key}
+                type="number"
+                placeholder={key}
+                value={formData[key]}
+                onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                className="w-full border p-2 mb-3 rounded-lg"
+              />
+            ))}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-gray-200">
+                Cancel
+              </button>
+              <button onClick={updateProgress} className="px-4 py-2 rounded-lg bg-blue-600 text-white">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const StatCard = ({ title, value }) => (
+  <div className="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
+    <h2 className="text-3xl font-bold text-blue-600">{value}</h2>
+    <p className="text-gray-600">{title}</p>
+  </div>
+);
+
+const ChartCard = ({ title, children }) => (
+  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h2 className="text-xl font-semibold text-gray-800 mb-4">{title}</h2>
+    {children}
+  </div>
+);
 
 export default Progress;
