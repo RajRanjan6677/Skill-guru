@@ -251,7 +251,7 @@ const App = () => {
     // In the Canvas environment, the platform automatically injects the key during the fetch call.
     // For local testing, you would temporarily set the key here (e.g., const apiKey = "AIza...")
     const apiKey = ""; 
-    const apiUrl = `${API_URL_BASE}?key=AIzaSyDXL9b6aprJ0mbWfPE2XJhdWFY-PKih1nk`;
+    const apiUrl = `${API_URL_BASE}?key=`;
 
     try {
       setLoading(true);
