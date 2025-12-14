@@ -12,7 +12,7 @@ import Login from "./pages/Login";
 import MyCourses from "./pages/MyCourses";
 import Progress from "./pages/Progress";
 import Tasks from "./pages/Tasks";
-import Skills from "./pages/Skills";
+
 import AIChat from "./pages/AiChat";
 import Profile from "./pages/Profile";
 import Logout from "./components/Logout";
@@ -124,14 +124,7 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/skills"
-              element={
-                <PrivateRoute>
-                  <Skills />
-                </PrivateRoute>
-              }
-            />
+            
             <Route
               path="/chat"
               element={
